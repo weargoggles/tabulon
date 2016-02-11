@@ -1,7 +1,8 @@
 class Row(object):
-    def __init__(self, title='test', children=None):
+    def __init__(self, title='test', children=None, **defaults):
         self.title = title
         self.children = children or []
+        self.defaults = defaults
 
     def add_child(self, child):
         self.children.append(child)
@@ -17,7 +18,17 @@ class Row(object):
         ]
 
     def get_value(self, *params):
-        return 'f({})'.format(', '.join(p.render_key() for p in params))
+        base = {}
+        base.update(self.defaults)
+        args = reduce(
+            lambda a, d: a.update(d.as_dict()) or a,
+            params,
+            base
+        )
+        return '{}({})'.format(
+            self.title,
+            ', '.join(['%s=%s' % (k, v) for (k, v) in args.iteritems()]),
+        )
 
     def render(self, columns):
         return {
